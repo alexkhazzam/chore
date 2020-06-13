@@ -1,147 +1,101 @@
 const choreName = document.querySelector(".chore-name");
 const choreTime = document.querySelector(".chore-time-determination");
-const submitChore = document.querySelector("button");
-const availableChoreList = document.querySelector(".list-of-chores");
-const activeChoresSection = document.querySelector(".active-chores");
+const addToListBtn = document.querySelector(".add-to-list");
+const choreSection = document.querySelector(".create-chore");
+const listOfChores = document.querySelector(".list-of-chores");
 
-const listOfIds = [];
-const listItems = [];
+let chores = [];
 
-class ValidateInputs {
-  validate() {
+class Chore {
+  constructor(chore, time, choreId) {
+    this.chore = chore;
+    this.time = time;
+    this.choreId = choreId;
+  }
+}
+
+class VerifyUserInputs {
+  verify() {
     if (choreName.value.trim() === "" || choreTime.value.trim() === "") {
-      alert("Please enter valid chore name and time limit.");
-      choreName.value = "";
-      choreTime.value = "";
+      alert("Enter valid inputs.");
+      this.reset();
       return;
-    } else if (choreTime.value < 1) {
-      alert("Please enter a chore time >= 1");
-      choreTime.value = "";
-      return;
-    } else if (choreName.value.trim().includes("|")) {
-      alert('Please enter a chore name without the "|" symbol.');
-      choreName.value = "";
-      choreTime.value = "";
-    } else {
-      this.chore = choreName.value;
-      this.time = choreTime.value;
-      choreTime.value = "";
-      choreName.value = "";
-      const createChore = new CreateChore(this.chore, this.time);
     }
+    this.chore = choreName.value;
+    this.choreTime = choreTime.value;
+    this.choreId = Math.random();
+    choreName.value = "";
+    choreTime.value = "";
+    const renderChore = new RenderChore();
+    renderChore.renderChoreElement(this.chore, this.choreTime, this.choreId);
+  }
+
+  reset() {
+    choreName.value = "";
+    choreTime.value = "";
+    choreName.style.borderBottom = "2px solid red";
+    choreTime.style.borderBottom = "2px solid red";
+    choreSection.style.border = "2px solid red";
+
+    setTimeout(() => {
+      choreName.style.borderBottom = "2px solid black";
+      choreTime.style.borderBottom = "2px solid black";
+      choreSection.style.border = "2px solid black";
+    }, 1000);
   }
 }
 
-class CreateChore {
-  constructor(choreName, choreTime) {
-    this.choreName = choreName;
-    this.choreTime = choreTime;
-    this.appendToChoreList();
+class RenderChore {
+  renderChoreElement(choreName, choreTime, choreId) {
+    const newChore = new Chore(choreName, choreTime, choreId);
+    this.appendToDOM(choreName, choreTime, choreId);
   }
-  appendToChoreList() {
-    let pluralizedTime;
-    if (choreTime === 1) {
-      pluralizedTime = "Minute";
-    } else {
-      pluralizedTime = "Minutes";
-    }
-    let listItemElement = `${this.choreName} | ${this.choreTime} ${pluralizedTime}`;
-    let listItemReference = `${this.choreName}|${this.choreTime}${pluralizedTime}`;
-    listItems.push(listItemReference);
-    const choreElement = document.createElement("li");
-    choreElement.textContent = listItemElement;
-    availableChoreList.append(choreElement);
-    choreElement.scrollIntoView({ behavior: "smooth" });
-    choreElement.setAttribute("draggable", true);
-  }
-}
 
-class DragAndDrop {
-  constructor(chore) {
-    this.chore = chore;
-    this.handlingDragAndDrop();
-  }
-  handlingDragAndDrop() {
-    const availableChores = document.querySelector(".available-chores");
-    availableChores.style.backgroundColor = "pink";
-    availableChoreList.addEventListener("dragend", () => {
-      availableChores.style.backgroundColor = "#8585fa";
-      activeChoresSection.style.backgroundColor = "#8585fa";
-    });
-    activeChoresSection.addEventListener("dragover", (event) => {
-      event.preventDefault();
-      activeChoresSection.style.backgroundColor = "pink";
-      availableChores.style.backgroundColor = "#8585fa";
-    });
-    activeChoresSection.addEventListener("drop", () => {
-      activeChoresSection.style.backgroundColor = "#8585fa";
-      const choresInProgress = document.querySelector(".chores-in-progress");
-      // if (choresInProgress.hasChildNodes("li")) { /////////////////////////////
-      //   alert("You can only have 1 chore in the activated section. If you want to remove a chore, click on it.");
-      // }else {
-        choresInProgress.append(this.chore);
-        //}
-      // const getChoreTime = new GetChoreTime(this.chore);
+  appendToDOM(choreName, choreTime, choreId) {
+    const text = `${choreName} | ${choreTime} Minute(s)`;
+    const listItem = document.createElement("li");
+    listItem.textContent = text;
+    listItem.id = choreId;
+    listItem.setAttribute("draggable", true);
+    chores.push(listItem);
+    listOfChores.append(listItem);
+
+    listItem.addEventListener("click", (event) => {
+      listOfChores.removeChild(event.target)
+      let index = chores.indexOf(event.target);
+      chores.splice(index, 1);
+
+      const dragHandler = new DragHandler();
+      dragHandler.renderDrag();
     });
   }
 }
 
-class GetChoreTime {
-  constructor(chore) {
-    this.chore = chore;
-    this.getMinute();
-  }
-  getMinute() {
-    let whiteSpace = [];
-    let validLetters = [];
-    let splittedItems = this.chore.textContent.split("");
-    splittedItems.filter((letter) => {
-      if (letter.trim() === "") {
-        whiteSpace.push(letter);
-      }else {
-        validLetters.push(letter);
-      }
+class DragHandler {
+  renderDrag() {
+    const li = document.querySelectorAll("li");
+    console.log(li);
+    li.forEach((listItem) => {
+      console.log(listItems);
+      console.log("hi")
+      listItem.addEventListener("dragstart", event => {
+        console.log("hi")
+        console.log(event.target);
+      });
     });
-    if (validLetters.includes("|")) {
-      let indexOfLine = validLetters.indexOf("|");
-      let indexOfLastM = validLetters.lastIndexOf("M");
-      let newArrayWithMinute = validLetters.slice(indexOfLine, indexOfLastM);
-      newArrayWithMinute.shift();
-      const setTimeout = new HandleTimeout(this.chore);
-      setTimeout.renderTimeout(newArrayWithMinute);
-    }
-  }
-} 
-
-class HandleTimeout {
-  constructor(chore) {
-    this.chore = chore;
-  }
-  renderTimeout(minutes = []) {
-    let concatinated = minutes.concat();
-    let joined = concatinated.join("");
-    this.minutesSet = joined;
-    this.timeLimit = joined * 1000;
-    this.setTimeout();
-  }
-  setTimeout() {
-    alert("Press \"Ok\" to get access to the \"Start Timer\" button; upon pressing it, the timer will start counting down.");
-    this.setButtonClick();
-  }
-  
-  setButtonClick() {
-    const button = document.querySelector(".end-chore");
-    button.style.display = "block";
   }
 }
+class TimerTracker {}
 
-activeChoresSection.addEventListener("dragleave", () => {
-  activeChoresSection.style.backgroundColor = "#8585fa";
-});
+const verifyUserInputs = new VerifyUserInputs();
+addToListBtn.addEventListener(
+  "click",
+  verifyUserInputs.verify.bind(verifyUserInputs)
+);
 
-availableChoreList.addEventListener("dragstart", (event) => {
-  const dragAndDrop = new DragAndDrop(event.target);
-});
 
-const validateInputs = new ValidateInputs();
-submitChore.addEventListener("click", validateInputs.validate.bind(this));
+
+
+// https://www.wix.com/website-template/view/html/1995?siteId=a51d32ee-c2eb-494c-86b9-0d1c722f9f85&metaSiteId=16dcad0e-953b-4c09-ae4a-2abc30d21d17&originUrl=https%3A%2F%2Fwww.wix.com%2Fwebsite%2Ftemplates%2Fhtml%2Fmost-popular
+
+
